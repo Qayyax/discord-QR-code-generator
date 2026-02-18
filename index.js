@@ -20,6 +20,12 @@ const commands = [
   new SlashCommandBuilder()
     .setName("hello")
     .setDescription("Say hello")
+    .addStringOption((option) =>
+      option
+        .setName("name")
+        .setDescription("The name to greet as default")
+        .setRequired(false),
+    )
     .toJSON(),
 
   new SlashCommandBuilder()
@@ -42,7 +48,8 @@ async function main() {
   client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
     if (interaction.commandName === "hello") {
-      await interaction.reply(`hello ${interaction.user.username}`);
+      const name = interaction.options.getString("name", false);
+      await interaction.reply(`hello ${name ?? interaction.user.username}`);
     }
     if (interaction.commandName === "anime") {
       const randomNumber = Math.floor(Math.random() * animes.length);
