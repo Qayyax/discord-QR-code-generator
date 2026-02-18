@@ -1,36 +1,45 @@
 import config from "./config.js";
 import {
   Client,
-  Collection,
   Events,
   GatewayIntentBits,
-  MessageFlags,
+  REST,
+  Routes,
+  SlashCommandBuilder,
 } from "discord.js";
 
-const { discordToken } = config;
+const { discordToken, clientID, guildID } = config;
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
+  intents: [GatewayIntentBits.Guilds],
 });
 
-client.once("ready", () => {
-  console.log(`🤖 Logged in as ${client.user.tag}`);
-});
+const commands = [
+  new SlashCommandBuilder()
+    .setName("hello")
+    .setDescription("Say hello")
+    .toJSON(),
+];
 
-// Listen and respond to messages
-client.on("messageCreate", (message) => {
-  // Ignore messages from bots
-  if (message.author.bot) return;
+async function main() {
+  const rest = new REST({ version: "10" }).setToken(discordToken);
 
-  // Respond to a specific message
-  if (message.content.toLowerCase() === "hello") {
-    message.reply("Hi there! 👋 I am your friendly bot.");
-  }
-});
+  await rest.put(Routes.applicationGuildCommands(clientID, guildID), {
+    body: commands,
+  });
 
-// Log in to Discord using token from .env
-client.login(process.env.DISCORD_TOKEN);
+  client.once(Events.ClientReady, (c) => {
+    console.log(`Logged in as ${c.user.tag}`);
+  });
+
+  client.on(Events.InteractionCreate, async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+    if (interaction.commandName === "hello") {
+      await interaction.reply(`hello ${interaction.user.username}`);
+    }
+  });
+
+  await client.login(discordToken);
+}
+
+main().catch(console.error);
