@@ -14,10 +14,17 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
 
+const animes = ["Demon Slayer", "Jujutsu Kaisen", "Naruto", "My hero Academia"];
+
 const commands = [
   new SlashCommandBuilder()
     .setName("hello")
     .setDescription("Say hello")
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName("anime")
+    .setDescription("Responds with random Anime")
     .toJSON(),
 ];
 
@@ -36,6 +43,11 @@ async function main() {
     if (!interaction.isChatInputCommand()) return;
     if (interaction.commandName === "hello") {
       await interaction.reply(`hello ${interaction.user.username}`);
+    }
+    if (interaction.commandName === "anime") {
+      const randomNumber = Math.floor(Math.random() * animes.length);
+      const randomAnime = animes[randomNumber];
+      await interaction.reply(` You should watch ${randomAnime}`);
     }
   });
 
