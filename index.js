@@ -1,16 +1,20 @@
-const fs = require("node:fs");
-const path = require("node:path");
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import config from "./config.js";
 import {
   Client,
   Collection,
-  CommandInteraction,
   Events,
   GatewayIntentBits,
+  MessageFlags,
 } from "discord.js";
 
 const { discordToken } = config;
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 client.once(Events.ClientReady, (readyClient) => {
   console.log(`Ready! Logged in  as ${readyClient.user.tag}`);
 });
@@ -28,7 +32,8 @@ for (const folder of commandFolders) {
 
   for (const file of commandFiles) {
     const filePath = path.join(commandPath, file);
-    const command = require(filePath);
+    const commandModule = await import(pathToFileURL(filePath).href);
+    const command = commandModule.default ?? commandModule;
 
     if ("data" in command && "execute" in command) {
       client.commands.set(command.data.name, command);
@@ -42,6 +47,7 @@ for (const folder of commandFolders) {
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
+  const command = interaction.client.commands.get(interaction.commandName);
 
   if (!command) {
     console.error(`No command matching  ${interaction.commandName} was found`);
