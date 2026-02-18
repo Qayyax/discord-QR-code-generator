@@ -1,8 +1,7 @@
 const baseURL = "http://api.qrserver.com/v1/create-qr-code/";
-// ?data=HelloWorld!&size=100x100
 
 const getQRCode = async (uri) => {
-  const data = encodeuricomponent(uri);
+  const data = encodeURI(uri);
   const fullUrl = `${baseURL}?data=${data}&size=400x400`;
   const res = await fetch(fullUrl);
   if (!res.ok) {

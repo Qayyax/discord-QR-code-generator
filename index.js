@@ -83,7 +83,7 @@ async function main() {
           name: `qr-code.${ext}`,
         });
         await interaction.editReply({
-          content: `hello ${interaction.user.username}`,
+          content: `Here is the QR-code for ${uri}`,
           files: [file],
         });
       } catch (err) {
