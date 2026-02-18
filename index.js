@@ -12,7 +12,7 @@ import {
 const { discordToken } = config;
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 client.once(Events.ClientReady, (readyClient) => {
-  console.log(`Ready! Logged in  as ${readyClient.user.id}`);
+  console.log(`Ready! Logged in  as ${readyClient.user.tag}`);
 });
 
 client.commands = new Collection();
