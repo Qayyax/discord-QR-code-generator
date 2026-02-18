@@ -1,5 +1,6 @@
 import config from "./config.js";
 import {
+  AttachmentBuilder,
   Client,
   Events,
   GatewayIntentBits,
@@ -7,6 +8,7 @@ import {
   Routes,
   SlashCommandBuilder,
 } from "discord.js";
+import getQRCode from "./qrcode-gen.js";
 
 const { discordToken, clientID, guildID } = config;
 
@@ -32,6 +34,16 @@ const commands = [
     .setName("anime")
     .setDescription("Responds with random Anime")
     .toJSON(),
+  new SlashCommandBuilder()
+    .setName("qr-generator")
+    .setDescription("Returns a qr generated image based on option")
+    .addStringOption((option) =>
+      option
+        .setName("URI")
+        .setDescription("The uri you want to convert to qr-code")
+        .setRequired(true),
+    )
+    .toJSON(),
 ];
 
 async function main() {
@@ -55,6 +67,23 @@ async function main() {
       const randomNumber = Math.floor(Math.random() * animes.length);
       const randomAnime = animes[randomNumber];
       await interaction.reply(` You should watch ${randomAnime}`);
+    }
+    await interaction.deferReply();
+    if (interaction.commandName === "qr-generator") {
+      // this is where we call the fetch function
+      const uri = interaction.options.getString("URI", true);
+      try {
+        const { ext, bytes } = getQRCode(uri);
+        const file = new AttachmentBuilder(Buffer.from(bytes), {
+          name: `qr-code.${ext}`,
+        });
+        await interaction.editReply({
+          content: `hello ${interaction.user.username}`,
+          files: [file],
+        });
+      } catch (err) {
+        await interaction.editReply(`Failed to fetch image: ${err.message}`);
+      }
     }
   });
 
