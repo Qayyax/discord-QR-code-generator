@@ -1,6 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
 import config from "./config.js";
 import {
   Client,
@@ -11,65 +8,29 @@ import {
 } from "discord.js";
 
 const { discordToken } = config;
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
-client.once(Events.ClientReady, (readyClient) => {
-  console.log(`Ready! Logged in  as ${readyClient.user.tag}`);
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
 });
 
-client.commands = new Collection();
+client.once("ready", () => {
+  console.log(`🤖 Logged in as ${client.user.tag}`);
+});
 
-const folderPath = path.join(__dirname, "commands");
-const commandFolders = fs.readdirSync(folderPath);
+// Listen and respond to messages
+client.on("messageCreate", (message) => {
+  // Ignore messages from bots
+  if (message.author.bot) return;
 
-for (const folder of commandFolders) {
-  const commandPath = path.join(folderPath, folder);
-  const commandFiles = fs
-    .readdirSync(commandPath)
-    .filter((file) => file.endsWith(".js"));
-
-  for (const file of commandFiles) {
-    const filePath = path.join(commandPath, file);
-    const commandModule = await import(pathToFileURL(filePath).href);
-    const command = commandModule.default ?? commandModule;
-
-    if ("data" in command && "execute" in command) {
-      client.commands.set(command.data.name, command);
-    } else {
-      console.log(
-        `[WARNING] The command at ${filePath} is missing  required "data" or "execute" property.`,
-      );
-    }
-  }
-}
-
-client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
-  const command = interaction.client.commands.get(interaction.commandName);
-
-  if (!command) {
-    console.error(`No command matching  ${interaction.commandName} was found`);
-    return;
-  }
-
-  try {
-    await command.execute(interaction);
-  } catch (error) {
-    console.log(error);
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        content: "There was an error while executing this command!",
-        flags: MessageFlags.Ephemeral,
-      });
-    } else {
-      await interaction.reply({
-        content: "There was an error while executing this command!",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+  // Respond to a specific message
+  if (message.content.toLowerCase() === "hello") {
+    message.reply("Hi there! 👋 I am your friendly bot.");
   }
 });
 
-client.login(discordToken);
+// Log in to Discord using token from .env
+client.login(process.env.DISCORD_TOKEN);
