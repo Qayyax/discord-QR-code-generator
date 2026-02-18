@@ -39,7 +39,7 @@ const commands = [
     .setDescription("Returns a qr generated image based on option")
     .addStringOption((option) =>
       option
-        .setName("URI")
+        .setName("uri")
         .setDescription("The uri you want to convert to qr-code")
         .setRequired(true),
     )
@@ -59,21 +59,26 @@ async function main() {
 
   client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
+
     if (interaction.commandName === "hello") {
       const name = interaction.options.getString("name", false);
       await interaction.reply(`hello ${name ?? interaction.user.username}`);
+      return;
     }
+
     if (interaction.commandName === "anime") {
       const randomNumber = Math.floor(Math.random() * animes.length);
       const randomAnime = animes[randomNumber];
       await interaction.reply(` You should watch ${randomAnime}`);
+      return;
     }
-    await interaction.deferReply();
+
     if (interaction.commandName === "qr-generator") {
+      await interaction.deferReply();
       // this is where we call the fetch function
-      const uri = interaction.options.getString("URI", true);
+      const uri = interaction.options.getString("uri", true);
       try {
-        const { ext, bytes } = getQRCode(uri);
+        const { ext, bytes } = await getQRCode(uri);
         const file = new AttachmentBuilder(Buffer.from(bytes), {
           name: `qr-code.${ext}`,
         });
@@ -84,6 +89,7 @@ async function main() {
       } catch (err) {
         await interaction.editReply(`Failed to fetch image: ${err.message}`);
       }
+      return;
     }
   });
 
